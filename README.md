@@ -55,7 +55,7 @@ Cuando otras clases manipulan exageradamente los campos de esta Data Class, el c
 
 *Hide Method:* Una vez que la lógica se ha movida y la Data Class es mas "inteligente", se puede ocultar el acceso directo a getters/setters innecesarios.
 
-
+---
 ### Feature Envy
 Un método parece estar mas interesado en los datos de otras clase que en los de la propia. Un ejemplo claro seria que un método llama repetidamente a getters y setters de otro objeto para así poder calcular un valor.
 El problema es que la lógica estaría "celosa" de otra clase, esto rompe el encapsulamiento y dificulta el mantenimiento: cada cambio en la otra clase con los datos puede afectar métodos de otras.
@@ -64,20 +64,28 @@ El problema es que la lógica estaría "celosa" de otra clase, esto rompe el enc
 *Move Method:* Trasladar el método a la clase que posee la mayoría de los datos que utiliza.
 *Pasos Extra:* Usar Extract Method para separar la parte que es celosa y mover luego solo esa parte a la clase concreta.
 
-
+---
 ### Long Parameter List
-Un metodo con demasiados parametros es dificil de leer, de mantener y tiene a romperse cada vez qu... Mejor lo leo devuelta xd
+Un método con demasiados parámetros es difícil de leer, de mantener, y cuando quieres hacer un cambio, tienes que modificar todas las llamadas.
+Existen varios Refactorings que se pueden utilizar dependiendo de la situación:
 
+*Replace Parameter with Method:* Si un parámetro se puede obtener simplemente pidiéndoselo a un objeto que ya conoce, entonces mejor reemplazarlo por esa llamada y eliminar el parámetro.
+*Preserve Whole Object:* Si estas pasando varios atributos de un mismo objeto, es preferible pasar el objeto completo directamente.
+*Introduce Parameter Object:* Si ya se tiene un grupo de parámetros que viajan juntos todo el rato pero no tiene un objeto que los represente, se crea uno nuevo.
 
+---
+### Switch Statement
+El problema cuando hay muchos switch o  if-else repetidos es que, al agregar un nuevo caso, se tienen que modificar todos esos lugares relacionados. Esto lo que lleva es a duplicación y termina siendo frágil el código.
+La solución a este problema es usar polimorfismo para reemplazar el `switch`, identificar el método cuyo comportamiento depende del type code y entonces mover ahí la lógica.
 
+**Refactorings:**
+*Replace Type Code with Sub classes:* Seria crear una jerarquía de clases
+*Replace Type Code with State/Strategy:* Aplicar composición o strategy dependiendo de si cambia el type code en tiempo de ejecución o no.
 
+>Posterior a eso aplicar `Replace Conditional with polymorfism`
 
+Existen excepciones. Si hay pocos casos, afectan a un solo método y no van a cambiar seguido, el polimorfismo seria overkill.
 
-
-
-
-
-
-
-
-
+**En esos casos, se podrían utilizar:**
+- Replace parameter with Explicit Methods.
+- Introduce Null object (en caso de que algunos casos pregunte si es un objeto nulo).
