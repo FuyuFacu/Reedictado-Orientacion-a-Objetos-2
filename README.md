@@ -31,7 +31,7 @@ Las ventajas de los métodos pequeños es que explican mejor la intención del c
 
 **Estrategias a utilizar:**
 *Extract Method:* Lo que se hace es identificar los bloques de código que deberían ir juntos y convertirlos en métodos con nombres que sean claros, los cuales expliquen bien el propósito del mismo.
-*Replace Temp with Query:* Si existen muchas variables temporales que lo que hacen es que complican la extracción, entonces se reemplazan con otros métodos que las calculen.
+*Replace Temp with Query:* Si existen muchas variables temporales que lo que hacen es complicar la extracción, entonces se reemplazan con otros métodos que las calculen.
 *Introduce Parameter Object:* si la lista de los parámetros es muy larga, entonces se encapsulan en un objeto.
 *Replace method with Method Object:*  Esto es cuando todo lo anteriormente mencionado falla, y el método es demasiado grande o complejo.
 
@@ -270,11 +270,784 @@ Pasos:
 
 ---
 # Ejercicio 1
+Indicar que malos olores se presentan en los siguientes ejemplos:
+### 1.1 Protocolo del Cliente
+
+```java
+/**
+* Retorna el límite de crédito del cliente.
+*/
+protected double lmtCrdt() {...
+/**
+* Retorna el monto facturado al cliente desde la fecha f1 a la fecha f2.
+*/
+protected double mtFcE(LocalDate f1, LocalDate f2) {...
+/**
+* Retorna el monto cobrado al cliente desde la fecha f1 a la fecha f2.
+*/
+protected double mtCbE(LocalDate f1, LocalDate f2) {...
+```
+
+### Respuesta
+Lo que encuentro acá en este código es que hay mal olor con el tema de los nombres de las funciones. Se requieren comentarios para explicar el motivo del mismo. Por lo tanto no es muy intuitivo que digamos.
+**Opción Mejorada:**
+```java
+protected double limiteDeCredito() {...
+
+protected double montoFacturadoEntreFechas(LocalDate fecha1, LocalDate fecha2){...
+
+protected double montoCobradoClienteEntreFechas(LocalDate fecha1, LocalDate fecha2) {...
+```
+
+---
+### 1.2 Participacion en proyectos
+El tipo de cambio que se ha realizado fue aplicar Extract Method para luego usar Move Method. Estos cambios se realizaron porque había feature envy por parte de la clase Persona. Dicha clase hacia cosas que la clase Proyecto podía hacer sin ningún problema. Lo cual rompe encapsulamiento.
+
+---
+### 1.3 Cálculos
+Analice el código que se muestra a continuación. Indique qué defectos encuentra y cómo
+pueden corregirse.
+
+```java
+public void imprimirValores() {
+	int totalEdades = 0;
+	double promedioEdades = 0;
+	double totalSalarios = 0;
+	
+	for (Empleado empleado : personal) {
+		totalEdades = totalEdades + empleado.getEdad();
+		totalSalarios = totalSalarios + empleado.getSalario();
+	}
+	
+	promedioEdades = totalEdades / personal.size();
+	
+	String message = String.format("El promedio de las edades es %s y el
+	total de salarios es %s", promedioEdades, totalSalarios);
+	
+	System.out.println(message);
+}
+
+```
+
+### Respuesta
+En base al código propuesto, veo unos cuantos code smell a tomar en cuenta:
+- Reinventar La rueda -> Bloque for.
+- Temporary Field -> Muchas variables temporales.
+- Long Method -> Hace muchas cosas a la vez.
+
+### Paso 1 -> Extract Method
+El método `imprimirValores` hacia demasiadas cosas a la vez -> Hay que extraer el calculo del promedio de edades y el total de Salarios.
+
+**Resultado**
+```java
+public void imprimirValores() {
+	double promedioEdades = 0;
+	double totalSalarios = 0;
+	
+	totalSalarios = calcularTotalSalarios(personal);
+	promedioEdades = calcularPromedioEdades(personal);
+	
+	String message = String.format("El promedio de las edades es %s y el
+	total de salarios es %s", promedioEdades, totalSalarios);
+	System.out.println(message);
+}
+
+public double calcularTotalSalarios(List<Empleado> personal)
+{
+	double totalSalarios = 0;
+	
+	for (Empleado empleado : personal) {
+		totalSalarios = totalSalarios + empleado.getSalario();
+	}
+	return totalSalarios;
+}
+
+public double calcularPromedioEdades(List<Empleado> personal)
+{
+	int totalEdades = 0;
+	
+	for (Empleado empleado : personal) {
+		totalEdades = totalEdades + empleado.getEdad();
+	}
+	
+	return totalEdades / personal.size;
+}
+
+```
 
 
+### Paso 2 -> Replace Loop with Pipeline
+Los bucles `for` hacen operaciones muy comunes, por lo tanto esto es un caso de `reinventar la rueda` -> Se reemplazan los bucles con Streams los cuales expresen directamente la intención de los mismos -> en `calcularTotalEdades` y `calcularTotalSalarios`.
+
+```java
+public void imprimirValores() {
+	double promedioEdades = 0;
+	double totalSalarios = 0;
+	
+	totalSalarios = calcularTotalSalarios(personal);
+	promedioEdades = calcularPromedioEdades(personal);
+	
+	String message = String.format("El promedio de las edades es %s y el
+	total de salarios es %s", promedioEdades, totalSalarios);
+	System.out.println(message);
+}
+
+public double calcularTotalSalarios(List<Empleado> personal)
+{
+	return personal.stream()
+				.mapToDouble(Empleado::getSalario)
+				.sum();
+}
+
+public double calcularPromedioEdades(List<Empleado> personal)
+{
+	return personal.stream()
+				.mapToInt(Empleado::getEdad)
+				.average()
+				.orElse(0);
+}
+```
 
 
+### Ejercicio 2
+I. indique el mal olor
+II. indique el refactoring que lo corrige
+III. aplique el refactoring que lo corrige, mostrando el resultado final.
+
+### Ejercicio 2.1 Empleados
+
+**I. Mal olor**
+La lógica de calcular sueldo aparece repetida en las subclases -> `sueldoBasico - SueldoBasico * 0.13` siempre aparece.
+
+**II. Refactoring**
+**Extract Super Class:** Creo una nueva clase Empleado con sus atributos comunes y su lógica común
+
+**III. Aplicación:**
+```java
+public abstract class Empleado {
+	public String nombre;
+	public String apellido;
+	public double sueldoBasico = 0;
+	
+	public double getCalculoBase(){
+		return sueldoBasico - (sueldoBasico * 0.13);
+	}
+	
+	public abstract dobule sueldo();
+
+}
+```
+
+**I. Mal olor**
+Duplicated code -> Las clases que tienen `cantidadHijos` repiten el mismo atributo, por lo tanto se tiene que aplicar otro Refactoring.
+
+**II. Refactoring**
+`Extract Class / Extract SubClass:`crear una subclase `EmpleadoConHijos` que agrupe esta característica.
+
+**III. Aplicación**
+```java
+public abstract class EmpleadoConHijos extends Empleado {
+	public int cantidadHijos = 0;
+}
+```
+
+Luego de eso hago que extiendan de esa clase los empleados con dicha característica. Posterior a eso elimino la variable temporal local `cantidadHijos` de cada subclase que hereda `EmpleadoConHijos`.
+
+**Resultado Final:**
+
+```java
+public abstract class Empleado {
+    public String nombre;
+    public String apellido;
+    public double sueldoBasico = 0;
+
+    protected double getCalculoBase() {
+        return sueldoBasico - (sueldoBasico * 0.13);
+    }
+
+    public abstract double sueldo();
+}
+
+public abstract class EmpleadoConHijos extends Empleado {
+    public int cantidadHijos = 0;
+}
+
+public class EmpleadoTemporario extends EmpleadoConHijos {
+    public double horasTrabajadas = 0;
+
+    public double sueldo() {
+        return this.getCalculoBase() +
+               (this.horasTrabajadas * 500) +
+               (this.cantidadHijos * 1000);
+    }
+}
+
+public class EmpleadoPlanta extends EmpleadoConHijos {
+    public double sueldo() {
+        return this.getCalculoBase() +
+               (this.cantidadHijos * 2000);
+    }
+}
+
+public class EmpleadoPasante extends Empleado {
+    public double sueldo() {
+        return this.getCalculoBase();
+    }
+}
+
+```
+
+### Ejercicio 2.2 Juegos
+```java
+public class Juego {
+	// ......
+	public void incrementar(Jugador j) {
+		j.puntuacion = j.puntuacion + 100;
+	}
+	public void decrementar(Jugador j) {
+		j.puntuacion = j.puntuacion - 50;
+	}
+}
+
+public class Jugador {
+	public String nombre;
+	public String apellido;
+	public int puntuacion = 0;
+}
+```
+
+**I. Mal olor**
+Envidia de atributos -> Modifica variables pertenecientes a Jugador cuando podria hacerlo la propia clase jugador -> Terminando con romper el encapsulamiento.
+
+**II. Refactoring**
+Extract Method para posteriormente hacer Move Method. 
+
+**III. Aplicación**
+```java
+public class Juego {
+	// ......
+	public void incrementar(Jugador j) {
+		j.incrementarPuntuacion(100);
+	}
+	public void decrementar(Jugador j) {
+		j.decrementarPuntuacion(50);
+	}
+}
+
+public class Jugador {
+	public String nombre;
+	public String apellido;
+	public int puntuacion = 0;
+	
+	public void incrementarPuntuacion(int cantidad) {
+		this.puntuacion+= cantidad;
+		
+	}
+	
+	public void decrementarPuntuacion(int cantidad) {
+		this.puntuacion-= cantidad;
+	}
+	
+}
+```
 
 
+### Ejercicio 2.3 Publicaciones
+```java
+/**
+* Retorna los últimos N posts que no pertenecen al usuario user
+*/
+public List<Post> ultimosPosts(Usuario user, int cantidad) {
+	List<Post> postsOtrosUsuarios = new ArrayList<Post>();
+	
+	for (Post post : this.posts) {
+		if (!post.getUsuario().equals(user)) {
+		postsOtrosUsuarios.add(post);
+		}
+	}
+	
+	// ordena los posts por fecha
+	for (int i = 0; i < postsOtrosUsuarios.size(); i++) {
+		int masNuevo = i;
+		for(int j= i +1; j < postsOtrosUsuarios.size(); j++) {
+			if (postsOtrosUsuarios.get(j).getFecha().isAfter(
+				postsOtrosUsuarios.get(masNuevo).getFecha())) {
+				masNuevo = j;
+			}
+		}
+		Post unPost = postsOtrosUsuarios.set(i,
+		postsOtrosUsuarios.get(masNuevo));
+		postsOtrosUsuarios.set(masNuevo, unPost);
+	}
+	
+	
+	List<Post> ultimosPosts = new ArrayList<Post>();
+	int index = 0;
+	Iterator<Post> postIterator = postsOtrosUsuarios.iterator();
+	
+	while (postIterator.hasNext() && index < cantidad) {
+		ultimosPosts.add(postIterator.next());
+	}
+	return ultimosPosts;
+}
+```
+
+**I. Mal olor**
+Reinventar la rueda, esta utilizando loop for cuando se puede hacer tranquilamente con streams
+
+**II. Refactoring**
+Replace Loop with pipeline
+
+**III. Aplicación**
+
+```java
+/**
+* Retorna los últimos N posts que no pertenecen al usuario user
+*/
+public List<Post> ultimosPosts(Usuario user, int cantidad) {
+	List<Post> postsOtrosUsuarios = new ArrayList<Post>();
+	
+	postOtrosUsuarios = this.posts.stream()
+						.filter(x -> !x.getUsuario().equals(user))
+						.collect(Collectors::toList);
+	
+	// ordena los posts por fecha
+	for (int i = 0; i < postsOtrosUsuarios.size(); i++) {
+		int masNuevo = i;
+		for(int j= i +1; j < postsOtrosUsuarios.size(); j++) {
+			if (postsOtrosUsuarios.get(j).getFecha().isAfter(
+				postsOtrosUsuarios.get(masNuevo).getFecha())) {
+				masNuevo = j;
+			}
+		}
+		Post unPost = postsOtrosUsuarios.set(i,
+		postsOtrosUsuarios.get(masNuevo));
+		postsOtrosUsuarios.set(masNuevo, unPost);
+	}
+	
+	
+	List<Post> ultimosPosts = new ArrayList<Post>();
+	int index = 0;
+	Iterator<Post> postIterator = postsOtrosUsuarios.iterator();
+	
+	while (postIterator.hasNext() && index < cantidad) {
+		ultimosPosts.add(postIterator.next());
+	}
+	return ultimosPosts;
+}
+```
+
+**I. Mal olor**
+Long Method, el método hace muchas cosas cuando podría simplemente separarlas para mantener legibilidad.
+
+**II. Refactoring**
+Extract method
+
+**III. Aplicación**
+```java
+/**
+* Retorna los últimos N posts que no pertenecen al usuario user
+*/
+public void ordenarPostsPorFecha(list<Post> postOtrosUsuarios) {
+	for (int i = 0; i < postsOtrosUsuarios.size(); i++) {
+		int masNuevo = i;
+		for(int j= i +1; j < postsOtrosUsuarios.size(); j++) {
+			if (postsOtrosUsuarios.get(j).getFecha().isAfter(
+				postsOtrosUsuarios.get(masNuevo).getFecha())) {
+				masNuevo = j;
+			}
+		}
+		Post unPost = postsOtrosUsuarios.set(i,
+		postsOtrosUsuarios.get(masNuevo));
+		postsOtrosUsuarios.set(masNuevo, unPost);
+	}
+}
+
+
+public List<Post> ultimosPosts(Usuario user, int cantidad) {
+	List<Post> postsOtrosUsuarios = new ArrayList<Post>();
+	
+	postOtrosUsuarios = this.posts.stream()
+						.filter(x -> !x.getUsuario().equals(user))
+						.collect(Collectors::toList);
+						
+	ordenarPostsPorFecha(postsOtrosUsuarios);
+	
+	List<Post> ultimosPosts = new ArrayList<Post>();
+	int index = 0;
+	Iterator<Post> postIterator = postsOtrosUsuarios.iterator();
+	
+	while (postIterator.hasNext() && index < cantidad) {
+		ultimosPosts.add(postIterator.next());
+	}
+	return ultimosPosts;
+}
+```
+
+**I. Mal olor**
+Reinventar la rueda, en el nuevo método creado utiliza un for loop cuando se podria hacer con un pipeline.
+
+**II. Refactoring**
+Replace loop with pipeline.
+
+**III. Aplicación**
+```java
+/**
+* Retorna los últimos N posts que no pertenecen al usuario user
+*/
+public void ordenarPostsPorFecha(list<Post> postOtrosUsuarios) {
+	posts.sort((p1, p2) -> p2.getFecha().compareTo(p1.getFecha()));
+}
+
+public List<Post> ultimosPosts(Usuario user, int cantidad) {
+	List<Post> postsOtrosUsuarios = new ArrayList<Post>();
+	
+	postOtrosUsuarios = this.posts.stream()
+						.filter(x -> !x.getUsuario().equals(user))
+						.collect(Collectors::toList);
+						
+	ordenarPostsPorFecha(postsOtrosUsuarios);
+	
+	List<Post> ultimosPosts = new ArrayList<Post>();
+	int index = 0;
+	Iterator<Post> postIterator = postsOtrosUsuarios.iterator();
+	
+	while (postIterator.hasNext() && index < cantidad) {
+		ultimosPosts.add(postIterator.next());
+	}
+	return ultimosPosts;
+}
+```
+
+### Ejercicio 2.4 Carrito de compras
+
+```java
+public class Producto {
+	private String nombre;
+	private double precio;
+	public double getPrecio() {
+		return this.precio;
+	}
+}
+public class ItemCarrito {
+	private Producto producto;
+	private int cantidad;
+	public Producto getProducto() {
+		return this.producto;
+	}
+	public int getCantidad() {
+		return this.cantidad;
+	}
+}
+public class Carrito {
+	private List<ItemCarrito> items;
+	public double total() {
+		return this.items.stream().mapToDouble(item -> item.getProducto()
+		.getPrecio() * item.getCantidad()).sum();
+	}
+}
+```
+
+**I. Mal olor**
+Feature Envy -> Esta calculando el precio del producto por la cantidad, cuando podria hacerlo practicamente la propia clase ItemCarrito 
+
+**II. Refactoring**
+Move Method
+
+**III. Aplicación**
+```java
+public class Producto {
+	private String nombre;
+	private double precio;
+	public double getPrecio() {
+		return this.precio;
+	}
+}
+public class ItemCarrito {
+	private Producto producto;
+	private int cantidad;
+	public Producto getProducto() {
+		return this.producto;
+	}
+	
+	public int getCantidad() {
+		return this.cantidad;
+	}
+	
+	public double getTotalPrecio() {
+		return this.producto.getPrecio() * cantidad;
+	}
+}
+public class Carrito {
+	private List<ItemCarrito> items;
+	public double total() {
+	
+	return this.items.stream()
+		.mapToDouble(ItemCarrito::getTotalPrecio)
+		.sum();
+	}
+	
+}
+```
+
+### Ejercicio 2.5 Envió de pedidos
+```java
+public class Supermercado {
+	public void notificarPedido(long nroPedido, Cliente cliente) {
+		String notificacion = MessageFormat.format(
+		
+		“Estimado cliente, se le informa que hemos recibido su pedido
+			con número {0}, el cual será enviado a la dirección {1}”,
+			new Object[] { nroPedido, cliente.getDireccionFormateada() }
+			
+		);
+		// lo imprimimos en pantalla, podría ser un mail, SMS, etc..
+		System.out.println(notificacion);
+	}
+}
+
+public class Cliente { 
+	public String getDireccionFormateada() { 
+		return this.direccion.getLocalidad() + “, ” + 
+				this.direccion.getCalle() + “, ” + 
+				this.direccion.getNumero() + “, ” + 
+				this.direccion.getDepartamento(); 
+	}
+}
+```
+
+**I. Mal olor**
+Feature envy -> Cliente tiene un método que formatea la dirección, cuando podrida hacerlo la dirección
+
+**II. Refactoring**
+Extract Method -> Move Method
+
+**III. Aplicación**
+```java
+public class Supermercado {
+	public void notificarPedido(long nroPedido, Cliente cliente) {
+		String notificacion = MessageFormat.format(
+		
+		“Estimado cliente, se le informa que hemos recibido su pedido
+			con número {0}, el cual será enviado a la dirección {1}”,
+			new Object[] { nroPedido, cliente.getDireccionFormateada() }
+			
+		);
+		// lo imprimimos en pantalla, podría ser un mail, SMS, etc..
+		System.out.println(notificacion);
+	}
+}
+
+public class Cliente { 
+	public String getDireccionFormateada() { 
+		return this.direccion.getFormato();
+	}
+}
+
+```
+### Ejercicio 2.5 Envió de pedidos
+```java
+public class Usuario {
+	String tipoSubscripcion;
+	
+	public void setTipoSubscripcion(String unTipo) {
+		this.tipoSubscripcion = unTipo.
+	}
+	public double calcularCostoPelicula(Pelicula pelicula) {
+		double costo = 0;
+		
+		if (tipoSubscripcion == "Basico") {
+			costo = pelicula.getCosto() +
+			pelicula.calcularCargoExtraPorEstreno();
+		}
+		
+		else if (tipoSubscripcion == "Familia") {
+			costo = (pelicula.getCosto() +
+			pelicula.calcularCargoExtraPorEstreno()) * 0.90;
+		}
+		else if (tipoSubscripcion == "Plus") {
+			costo = pelicula.getCosto();
+		}
+		else if (tipoSubscripcion == "Premium") {
+			costo = pelicula.getCosto() * 0.75;
+		}
+		
+		return costo;
+	}
+}
+
+public class Pelicula {
+	LocalDate fechaEstreno;
+	// ...
+	public double getCosto() {
+		return this.costo;
+	}
+	
+	public double calcularCargoExtraPorEstreno() {
+		// Si la Película se estrenó 30 días antes de la fecha actual, 
+		// retorna un cargo de 0$, caso contrario, retorna un cargo extra de 300$
+		
+		return (ChronoUnit.DAYS.between(this.fechaEstreno, LocalDate.now())) >
+		30 ? 0 : 300;
+	}
+}
+```
+
+**I. Mal olor**
+Switch Statement -> Hay muchos condicionales, los cuales pueden hacer que se tienda a duplicar codigo
+
+**II. Refactoring**
+Replace conditional with Strategy
+
+**III. Aplicación**
+
+```java
+public class Usuario {
+	Subscripcion tipoSubscripcion;
+	
+	public void setTipoSubscripcion(Subscripcion unTipo) {
+		this.tipoSubscripcion = unTipo;
+	}
+	
+	public double calcularCostoPelicula(Pelicula pelicula) {
+		double costo = tipoSubscripcion.calcularCostoPelicula(pelicula);
+		return costo;
+	}
+}
+
+public abstract class Subscripcion {
+	public abstract double calcularCostoPelicula(Pelicula p);
+}
+
+public class SubscripcionBasica extends Subscripcion {
+	public double calcularCostoPelicula(Pelicula p) {
+		return 
+			pelicula.getCosto() +
+			pelicula.calcularCargoExtraPorEstreno();
+	}
+}
+
+public class SubscripcionFamilia extends Subscripcion {
+	public double calcularCostoPelicula(Pelicula p) {
+		return
+			(pelicula.getCosto() +
+			pelicula.calcularCargoExtraPorEstreno()) * 0.90;
+	}
+}
+
+public class SubscripcionPlus extends Subscripcion {
+	public double calcularCostoPelicula(Pelicula p) {
+		return
+			pelicula.getCosto();
+	}
+}
+
+public class SubscripcionPremium extends Subscripcion {
+	public double calcularCostoPelicula(Pelicula p) {
+		return
+			pelicula.getCosto() * 0.75;
+	}
+}
+
+
+public class Pelicula {
+	LocalDate fechaEstreno;
+	// ...
+	public double getCosto() {
+		return this.costo;
+	}
+	
+	public double calcularCargoExtraPorEstreno() {
+		// Si la Película se estrenó 30 días antes de la fecha actual, 
+		// retorna un cargo de 0$, caso contrario, retorna un cargo extra de 300$
+		
+		return (ChronoUnit.DAYS.between(this.fechaEstreno, LocalDate.now())) >
+		30 ? 0 : 300;
+	}
+}
+```
+
+
+### Ejercicio 3
+El diseño propuesto no constituye a un refactoring, ya que esta agregando nueva funcionalidad al diseño. No solo simplemente cambia la estructura o mejora la legibilidad, sino que agrego una nueva clase y por lo tanto implemento una funcionalidad que no estaba.
+
+
+### Ejercicio 4
+
+1. **Diagrama UML**
+
+```uml
+@startuml
+
+class Student {
+  - name : String
+  - id : String
+  - classes : Vector<ClassTaken>
+  --
+  + Student(newName: String, ident: String)
+  + addClass(name: String) : void
+  + addDoneClass(name: String) : void
+  + addGradedClass(name: String, grade: int) : void
+  + finalsOverTaken() : float
+  + fitForScolarship() : boolean
+}
+
+class ClassTaken {
+  - name : String
+  - done : boolean
+  - grade : int
+  --
+  + ClassTaken(aName: String)
+}
+
+Student "1" *-- "*" ClassTaken : "classes"
+
+@enduml
+```
+
+
+2. Reglas para que el alumno este en condiciones de de recibir una beca:
+   El alumno debe tener aprobado al menos mas de la mitad de las materias que curso -> Esto seria una nota mayor/igual que 4 en mas del 0.5/50% de las materias cursadas.
+   El alumno debe haber aprobado el final en mas de 2/3 creo que seria ese numero de las materias rendidas (O sea, nota mayor/igual que 6 en mas del 66% de las clases con final).
+   
+3. Analizando los cambios -> El primero parece ser un refactoring, ya que no ha cambiado el comportamiento, sino que elimino datos que parecían complicar el entendimiento de lo que estaba haciendo el programa.
+
+   El segundo -> Es lo mismo que el primero ->  En vez de ingresar 0.5 simplemente invoca la función `finalsRatio()` para mejorar la legibilidad
+   
+   El tercero -> Otro refactoring. No cambia la implementacion del mismo, simplemente cambia el nombre para mejorar la legibilidad de lo que realmente hace el método.
+   
+### Ejercicio 5
+Ay B. Lo que veo acá es que hay métodos duplicados por parte de `AirTicket` y `HotelStay` -> `startDate` y `endDate`.
+Solución propuesta -> Crear una clase abstracta que herede de product y `AirTicket` y `HotelStay` hereden de ella. Posterior a eso copiar los dos métodos a la superclase y eliminar los de la subclase.
+```java
+public abstract class SingleProducts extends Product {  
+    LocalDate startDate() {  
+        return tripPeriod.start;  
+    }  
+  
+    LocalDate endDate() {  
+        return tripPeriod.end;  
+    }  
+}
+```
+
+`AirTicket` y `HotelStay` van a heredar de esta misma. Para después eliminar los métodos implementados en la subclase.
+Y para el caso de variables repetidas. Hago lo mismo, subo `cost` y `timePeriod` de ambas variables y hago que hereden de esa misma, eliminando la de las subclases.
+
+C.
+Actualmente tenemos tres implementaciones de price()
+No podemos reducirlo a uno solo, ya que el calculo es diferente. Lo único que se podría hacer es que la clase Producto convierta el método price() en abstracto para obligar a todas las subclases a tener que implementarlo.
+
+### Ejercicio 7
+En el método promedio que supuestamente posee "cod smells" estos son los que he encontrado:
+- Reinventar la rueda.
+- Temporary Fields.
+
+También posee algunos problemas de verificación de limites. Pero ese problema ya no es un code smell sino de implementacion.
+
+Ahora, en base al calculo del promedio que se estaba realizando: Se ha aplicado el refactoring correspondiente de manera correcta sin agregar implementacion? 
+Mi respuesta es si: Ya que si no se consigue ninguna de las notas y no se llega a ningún resultado entonces devuelve 0. Ese 0 es la "suma" que tenia antes inicializado el método viejo. Ahora lo ponen en caso de que no haya ninguna nota. 
+El promedio es el mismo, simplemente que no se reinventa la rueda dividiendo la suma por el size y simplemente utiliza un `average` para estos casos. 
+Así que, descartando la implementacion anterior. Diria que se aplico el refactoring de manera correcta.
 
 
