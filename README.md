@@ -1050,4 +1050,132 @@ Mi respuesta es si: Ya que si no se consigue ninguna de las notas y no se llega 
 El promedio es el mismo, simplemente que no se reinventa la rueda dividiendo la suma por el size y simplemente utiliza un `average` para estos casos. 
 Así que, descartando la implementacion anterior. Diria que se aplico el refactoring de manera correcta.
 
+### Ejercicio 8
+Dado el siguiente código de calculo de precio para un sistema de ventas:
+```java
+public double calcularPrecioFinal(double precio, 
+								double descuento, double impuestos) 
+{
+	return (precio - (precio * descuento)) + impuestos; 
+}
+```
+
+1. Analice el código e indique que precondiciones se deben cumplir para con los datos de entrada y que postcondiciones se garantizan tras la finalizacion del método.
+2. Identifique claramente los malos olores del código
+3. Aplique un refactoring que mejore la legibilidad y que permita expresar mas claramente las precondiciones y postcondiciones del código.
+
+**Respuesta**
+1. El método ``calcularPrecioFinal`` lo que hace primero es hacer un calculo junto con el precio, el descuento que se va a descontar del precio final, mas la cantidad de impuestos a cobrar.
+   Las **precondiciones** serian que el precio tiene que ser **mayor o igual que 0**, ya que no tendría sentido un precio negativo en estos casos.
+   Después en **descuento**, el rango aceptable para el valor tiene que oscilar entre 0 y 1, ya que este código se interpreta como porcentaje -> 0.5 = 50% al hacer el calculo.
+   Por ultimo **impuestos** -> Estos deben ser **mayor o igual que 0** -> En la vida real el impuesto nunca restaría, no tendría sentido :v, en esos casos seria algún subsidio.
+   Las **postcondiciones** seria que el método una vez terminado devuelva un numero real, el precio final debería ser >= 0.
+   
+2. Malos olores en el código:
+   - **Long Parameter List** -> Posee muchos **parámetros**, lo que dificulta la legibilidad **mismo**.
+
+3)
+```java
+// Calcula el precio final aplicadno descuento y sumando impuestos
+// precondiciones => precio >= 0; 0 <= descuento <= 1; impuestos >= 0
+// Postcondiciones => Devuelve double >= 0 si las precondiciones se cumplen
+
+public double calcularPrecioFinal(double precio, double descuento, double impuestos) {
+	double montoDescuento = precio * descuento;
+	double precioConDescuento = precio - montoDescuento;
+	double precioFinal = precioConDescuento + impuestos;
+	return precioFinal;
+}
+```
+
+El comportamiento es igual al original, las operaciones están documentadas y separadas. No hice validaciones nuevas porque eso se consideraría agregar nueva funcionalidad, no refactorizar. Por lo tanto hice lo que pude para no agregar nueva funcionalidad y simplemente mejore la legibilidad y expresividad del método.
+
+### Ejercicio 9
+En un sistema de gestión de un hotel se cuenta con el siguiente método:
+```java
+public Reserva reservarHabitacion
+(Hotel hotel, Cliente cliente, LocalDate desde, LocalDate hasta) { 
+
+Habitacion habitacion = hotel.buscarDisponible(desde, hasta); 
+Reserva reserva = new Reserva(habitacion, cliente, desde, hasta);
+ 
+hotel.registrarReserva(reserva); return reserva; 
+
+}
+```
+
+**Responda:** 
+1. ¿Qué supuestos deben cumplirse para que el método funcione correctamente? 
+2. ¿Qué se puede asumir tras la ejecución correcta del método? 
+3. Existe un problema cuando se intenta reservar habitaciones para un día sin vacantes disponibles, ¿qué refactoring se podría aplicar para corregir esto?
+
+**Respuesta**
+1. El primer supuesto seria que el hotel tenga fecha disponible para esa fecha a reservar. Por lo tanto si no esta disponible pues se agrega a la reserva independientemente del resultado.
+   El siguiente supuesto seria que las fechas sean validas. O sea que cumplan con las políticas del hotel (supongo que sera que la reserva sea durante el mismo año en el que se crean).
+   El tercer supuesto seria el que la reserva sea valida. El hotel registra la reserva independientemente de que la reserva sea invalida o no.
+   
+2. Se debe asumir que la reserva se realizo correctamente, que la fecha asignada a la reserva sea valida, que las fechas ingresadas fueron validas.
+   
+3. No seria un refactoring eso, seria agregar nueva implementacion. Pero si tuviera que arreglar eso diría que primero crear un método el cual sea `estaDisponible`, entonces le paso como parámetro desde, y ahora, entonces primero interpreto eso como query, hago un condicional que sea si esa búsqueda retorno positivo, entonces ejecuto el método buscar disponible y las demás cosas, como lo de la reserva y el `hotel.registrarReserva`. Pero si hubiera dado false entonces retornaría null.
+### Ejercicio 10
+
+a)
+```java
+public class PrimeGeneratorStream {
+    public int currentNumber;
+	private List<Integer> numbers;
+
+    public PrimeGeneratorStream() {
+        this.currentNumber = 2; // empezamos desde 2, el primer primo
+		numbers = new ArrayList<>();
+    }
+    public int next() {
+        while (true) {
+            if (isPrime(this.currentNumber)) {
+                int nextPrime = this.currentNumber;
+				numbers.add(nextPrime);
+                this.currentNumber++;
+                return nextPrime;
+            }
+            this.currentNumber++;
+        }
+    }
+    private boolean isPrime(int number) {
+        if (numbers.contains(number)) {
+            return true;
+        }
+        for (int i = 2; i <= Math.sqrt(number); i++) {
+            if (number % i == 0) {
+                return false;
+            }
+        }
+        return true;
+    }
+}
+```
+
+b)
+El error percatado por el colega es acerca de esta parte del código:
+```java
+if (numbers.contains(number)) {
+	return false;
+}
+```
+
+*Yo lo había arreglado inconscientemente pero así es como estaba antes.* 
+
+- El numero ya esta en la lista de primos, por lo tanto significa que SI ES PRIMO, por lo tanto se debería devolver true, no false como el otro.
+- Y respondiendo a lo de que si es refactoring o no... No, no es un refactoring: Un refactoring es un cambio en el código que lo que hace es mejorar el diseño, la legibilidad o su estructura, pero no altera su comportamiento de manera observable.
+- El corregir el `return false` por `return true` es un bug fix, no un refactoring.
+
+c)
+No, no es un refactoring. La implementacion hecha por mi acerca de generar una lista para que recuerde los números anteriores primos calculados es un cambio de implementacion de código. No se consideraría refactoring.
+
+d)
+La variable `currentNumber` no debería ser publica sino privada, ya que es un detalle interno del funcionamiento de la clase `PrimeGeneratorStream`
+Al tener que cambiarla a private, todos los métodos de la clase aun puede acceder y modificar sin problema. Un ejemplo seria `currentNumber++` dentro del `next()` sigue funcionando perfectamente.
+Este cambio puede que se considere refactoring, mientras que ningún código externo dependa de acceder directamente a ``currentNumber``, todo bien.
+
+> En resumen mejora la estructura del código y protege los datos internos de accesos indebidos
+
 
