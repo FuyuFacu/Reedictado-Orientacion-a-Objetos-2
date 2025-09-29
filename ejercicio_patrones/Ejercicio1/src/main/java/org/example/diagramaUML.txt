@@ -1,0 +1,38 @@
+@startuml
+
+class Twitter {
+ +agregarUsuario(u: Usuario): void;
+ +eliminarUsuario(u: Usuario): void;
+ +Twitter(): void;
+}
+
+class Usuario {
+ -screenName: String;
+ +Usuario(screenName: String): void;
+ +postear(mensaje: String): void;
+ +retweet(tweet: TipoTweet): void;
+ +eliminarTweets(): void;
+ +leerMensajes(tweet TipoTweet): void;
+ +getScreenName(): String;
+ +cumpleMensaje(mensaje: String): bool;
+ +leerTodo(): void;
+}
+
+interface TipoTweet {
+  + setTweet(mensaje: String): bool;
+  + retweet(tweet: TipoTweet): void
+  + leer(): void;
+  + getOrigen(): TipoTweet;
+}
+
+class Retweet implements TipoTweet {
+ -origen: TipoTweet 
+}
+
+class Tweet implements TipoTweet {
+ -String mensaje;
+}
+
+Usuario -> "0..[*]" TipoTweet
+Twitter -> "0..[*]" Usuario
+@enduml
