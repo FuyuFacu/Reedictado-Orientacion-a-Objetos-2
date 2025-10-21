@@ -1,0 +1,27 @@
+@startuml
+    interface ITopografia {
+        +getProporcion(): double
+        +compararTopografias(topografia: ITopografia): boolean
+    }
+
+
+    class TopografiaNormal {
+        -proporcion: int
+        +TopografiaNormal(proporcion: int)
+        +getProporcion(): double
+        +compararTopografias(topografia: ITopografia): boolean
+    }
+
+
+    class TopografiaMixta {
+        +TopografiaMixta(topografias: List~ITopografia~)
+        +getProporcion(): double
+        +compararTopografias(topografia: ITopografia): boolean
+    }
+
+
+    ITopografia <|.. TopografiaNormal
+    ITopografia <|.. TopografiaMixta
+
+    TopografiaMixta --> ITopografia : "topografias"
+@enduml

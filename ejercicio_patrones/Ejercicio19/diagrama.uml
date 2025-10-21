@@ -1,0 +1,34 @@
+@startuml
+class Mensajero {
+ +enviar(mensaje: String)
+}
+
+class Conexion {
+ +enviar(mensaje: String)
+}
+
+class ConexionSegura extends Conexion {
+ +enviar(mensaje: String)
+}
+
+
+abstract class TipoEncriptado {
+ +<<abstract>>encriptar(mensaje: String): String
+}
+
+
+class EncriptadoRSA extends TipoEncriptado {
+ +encriptar(mensaje: String): String
+}
+
+class EncriptadoBlowfish extends TipoEncriptado {
+ +encriptar(mensaje: String): String
+}
+
+class EncriptadoRC4 extends TipoEncriptado {
+ +encriptar(mensaje: String): String
+}
+
+Mensajero --> Conexion: conexion
+ConexionSegura --> TipoEncriptado: encriptador
+@enduml

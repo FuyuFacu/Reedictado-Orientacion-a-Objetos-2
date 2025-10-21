@@ -1,0 +1,53 @@
+@startuml
+class PNGFilterLauncher {
+    - filters : Map<String, Filter>
+    - activeFilters : ArrayList<Filter>
+    - inputFile : File
+    - outputFile : File
+    + main(args : String[]) : void
+    + processArgs(args : String[]) : void
+    + initializeFilters() : void
+}
+
+abstract class Filter {
+    + filter(image : BufferedImage) : BufferedImage
+}
+
+class Artifacter {
+    + compressionQuality : float
+    + filter(image : BufferedImage) : BufferedImage
+}
+
+class Dull {
+    + filter(image : BufferedImage) : BufferedImage
+}
+
+class Rainbow {
+    + filter(image : BufferedImage) : BufferedImage
+}
+
+class Repeater {
+    + X_REPEAT : int
+    + Y_REPEAT : int
+    + filter(image : BufferedImage) : BufferedImage
+}
+
+class RGBShifter {
+    + filter(image : BufferedImage) : BufferedImage
+    + shiftValue(original : int, shiftMagnitude : int) : int
+}
+
+class RGBShiftRepeater {
+    + X_REPEAT : int
+    + Y_REPEAT : int
+    + filter(image : BufferedImage) : BufferedImage
+}
+
+PNGFilterLauncher *-- Filter
+Filter <|-- Artifacter
+Filter <|-- Dull
+Filter <|-- Rainbow
+Filter <|-- Repeater
+Filter <|-- RGBShifter
+Filter <|-- RGBShiftRepeater
+@endum

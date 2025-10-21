@@ -1,0 +1,56 @@
+@startuml
+interface TipoPrenda {
+        +getValorTotal(): double
+    }
+
+    abstract class TipoBien {
+        -liquidez: double
+        -costo: double
+        +TipoBien(liquidez: double, costo: double)
+        +getLiquidez(): double
+        +getCosto(): double
+        +getValor(): double
+        +getValorPrendario(): double
+    }
+
+    class Automovil implements TipoBien {
+        -fechaCreacion: LocalDate
+        -modelo: String
+        -kilometraje: double
+        +Automovil(liquidez: double, costo: double, fechaCreacion: LocalDate, modelo: String, kilometraje: double)
+        +getValor(): double
+    }
+
+    class Inmueble implements TipoBien {
+        -direccion: String
+        -superficie: double
+        +Inmueble(liquidez: double, costo: double, direccion: String, superficie: double)
+        +getValor(): double
+    }
+
+    class Alquiler implements TipoBien {
+        -comienzoContrato: LocalDate
+        -finContrato: LocalDate
+        +Alquiler(liquidez: double, costo: double, comienzoContrato: LocalDate, finContrato: LocalDate)
+        +getValor(): double
+    }
+
+    class Prenda {
+        -prendaSimple: TipoBien
+        +Prenda(prendaSimple: TipoBien)
+        +getValorTotal(): double
+    }
+
+    class PrendaCombinada {
+        -<<static>> COEFICIENTE_COMBINADO: double = 0.5
+        +PrendaCombinada()
+        +agregarPrenda(prenda: TipoBien): void
+        +getValorTotal(): double
+    }
+
+    TipoPrenda <|.. Prenda
+    TipoPrenda <|.. PrendaCombinada
+
+    Prenda --> TipoBien : "adapta (Adapter)"
+    PrendaCombinada --> TipoBien : "0..1" prendas
+@enduml

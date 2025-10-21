@@ -1,0 +1,45 @@
+@startuml
+interface TipoCifrado {
+        +encriptar(mensaje: String, key: String): String
+        +desencriptar(mensaje: String, key: String): String
+    }
+
+    class RC4 {
+        -S: byte[]
+        -i: int
+        -j: int
+        -keySetup(key: byte[]): void
+        -process(data: byte[], key: byte[]): byte[]
+        +encriptar(mensaje: String, clave: String): String
+        +desencriptar(mensajeCifrado: String, clave: String): String
+    }
+
+    class FeistelCipherAdapter {
+        -raiz: FeistelCipher
+        +FeistelCipherAdapter(raiz: FeistelCipher)
+        +encriptar(mensaje: String, key: String): String
+        +desencriptar(mensaje: String, key: String): String
+    }
+
+    class FeistelCipher {
+        -key: String
+        -rounds: int = 4
+        -feistelBlock(block: byte[]): byte[]
+        +FeistelCipher(keyStr: String)
+        +encode(message: String): String
+    }
+
+    class Mensajero {
+        -tipoCifrado: TipoCifrado
+        +enviar(mensaje: String): void
+        +recibir(mensaje: String): void
+        +setTipoCifrado(tipoCifrado: TipoCifrado): void
+    }
+
+
+    TipoCifrado <|.. RC4
+    TipoCifrado <|.. FeistelCipherAdapter
+
+    FeistelCipherAdapter --> FeistelCipher : "usa / adapta"
+    Mensajero --> TipoCifrado : "1 usa (Strategy)"
+@enduml
