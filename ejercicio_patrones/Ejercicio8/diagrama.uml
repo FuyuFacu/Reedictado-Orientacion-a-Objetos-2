@@ -1,0 +1,64 @@
+@startuml
+abstract class Estado {
+    +display(e: Excursion): String
+    +agregar(u: Usuario, e: Excursion): void
+}
+
+
+class EstadoProvisorio {
+    +display(e: Excursion): String
+    +agregar(u: Usuario, e: Excursion): void
+}
+
+class EstadoDefinitivo {
+    +display(e: Excursion): String
+    +agregar(u: Usuario, e: Excursion): void
+}
+
+class EstadoMaximo {
+    +display(e: Excursion): String
+    +agregar(u: Usuario, e: Excursion): void
+}
+
+
+class Excursion {
+    -nombre: String
+    -fechaInicio: LocalDate
+    -fechaFin: LocalDate
+    -puntoEncuentro: String
+    -costo: double
+    -cupoMinimo: int
+    -cupoMaximo: int
+    -estadoExcursion: Estado
+
+    +infoBase(): String
+    +getEmailsInscriptos(): String
+    +getCantUsuariosFaltantesCupoMinimo(): String
+    +getCantUsuariosFaltantesCupoMaximo(): String
+    +mostrarInformacion(): String
+    +agregarUsuario(u: Usuario): void
+    +agregarInscriptos(u: Usuario): void
+    +agregarEspera(u: Usuario): void
+    +cupoMinimoAlcanzado(): boolean
+    +cupoMaximoAlcanzado(): boolean
+    +setEstadoExcursion(e: Estado): void
+}
+
+
+class Usuario {
+    -email: String
+    -nombre: String
+    -apellido: String
+    +inscribirse(e: Excursion): void
+    +getEmail(): String
+}
+
+' ==== RELACIONES ====
+Estado <|-- EstadoProvisorio
+Estado <|-- EstadoDefinitivo
+Estado <|-- EstadoMaximo
+
+Excursion --> Estado : "usa (State)"
+Excursion --> Usuario: "0..* inscriptos"
+Excursion --> Usuario: "0..* espera"
+@enduml

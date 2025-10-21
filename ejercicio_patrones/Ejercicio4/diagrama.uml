@@ -1,0 +1,34 @@
+@startuml
+class TipoEmpleado {
+    +sueldo(): double;
+    +descuento(): double;
+    +<<abstract>> basico(): double;
+    +<<abstract>> adicional(): double;
+}
+
+class EmpleadoPasante extends TipoEmpleado {
+    -cantExamenesRendidos: int;
+    +EmpleadoPasante(cantExamenesRendidos: int): void;
+}
+
+class EmpleadoPlanta extends TipoEmpleadoMayor {
+    -fechaInicio: LocalDate;
+    +EmpleadoPlanta(cantHijos: int, estaCasado: boolean, fechaInicio: LocalDate): void;
+    +getAdicionalPorAntiguedad(): double;
+}
+
+class EmpleadoTemporario extends TipoEmpleadoMayor {
+    +cantHorasTrabajadas: int;
+    +EmpleadoTemporario(cantHijos: int, estaCasado: boolean, cantHorasTrabajadas: int): void;
+}
+
+class TipoEmpleadoMayor extends TipoEmpleado {
+    -cantHijos: int;
+    -estaCasado: boolean;
+    +TipoEmpleadoMayor(cantHijos: int, estaCasado: boolean): void;
+    +getAdicionalPorHijos(): double;
+    +getAdicionalPorCasado(): double;
+    +<<abstract>> basico(): double;
+    +<<abstract>> adicional(): double;
+}
+@enduml

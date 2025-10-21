@@ -1,0 +1,63 @@
+@startuml
+class ToDoItem {
+    -nombre: String;
+    -comienzoTarea: LocalDate;
+
+    +ToDoItem(name: String): void;
+    +start():void;
+    +togglePause(): void;
+    +finish(): void;
+    +workedTime(): void;
+    +addComment(): void;
+    +setEstado(estado: TipoEstado): void;
+
+}
+
+
+abstract class TipoEstado {
+    -comentario: String;
+
+    +void setComentario(comentario: String): void;
+
+    +<<abstract>> void agregarComentario(comment: String): void;
+    +<<abstract>> void in_progress(todo: ToDoItem): void;
+    +<<abstract>> void pause(todo: ToDoItem): void;
+    +<<abstract>> void finish(todo: ToDoItem): void;
+    +<<abstract>> tiempoTrabajado(comienzo: LocalDate): void;
+}
+
+class Finished extends TipoEstado {
+    +void agregarComentario(comment: String): void;
+    +void in_progress(todo: ToDoItem): void;
+    +void pause(todo: ToDoItem): void;
+    +void finish(todo: ToDoItem): void;
+    +tiempoTrabajado(comienzo: LocalDate): void;
+}
+
+class InProgress extends TipoEstado {
+    +void agregarComentario(comment: String): void;
+    +void in_progress(todo: ToDoItem): void;
+    +void pause(todo: ToDoItem): void;
+    +void finish(todo: ToDoItem): void;
+    +tiempoTrabajado(comienzo: LocalDate): void;
+}
+
+class Pause extends TipoEstado {
+    +void agregarComentario(comment: String): void;
+    +void in_progress(todo: ToDoItem): void;
+    +void pause(todo: ToDoItem): void;
+    +void finish(todo: ToDoItem): void;
+    +tiempoTrabajado(comienzo: LocalDate): void;
+}
+
+class Pending extends TipoEstado {
+    +void agregarComentario(comment: String): void;
+    +void in_progress(todo: ToDoItem): void;
+    +void pause(todo: ToDoItem): void;
+    +void finish(todo: ToDoItem): void;
+    +tiempoTrabajado(comienzo: LocalDate): void;
+}
+
+
+ToDoItem --> TipoEstado: contiene;
+@enduml

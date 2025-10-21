@@ -1,0 +1,30 @@
+@startuml
+class Audio extends Media {
+    +play(): void;
+}
+
+abstract class Media{
+    +<<abstract>> play(): void;
+}
+
+class MediaPlayer {
+    +play(): void;
+}
+
+class VideoFile extends Media {
+   +play(): void; 
+}
+
+class VideoStream {
+    +reproduce(): void;
+}
+
+class VideoStreamAdapter extends Media {
+    +play(): void;
+}
+
+VideoStreamAdapter --> "1" VideoStream: adaptador
+MediaPlayer --> "1" Media
+@enduml
+
+

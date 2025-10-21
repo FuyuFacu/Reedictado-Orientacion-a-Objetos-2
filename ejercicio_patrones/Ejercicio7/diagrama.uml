@@ -1,0 +1,25 @@
+@startuml
+class Decodificador {
+    +Decodificador(listaEmpresa: List<Pelicula>): void;
+
+    +sugerirPorNovedad(): List<Persona>;
+    +sugerirPorSimilitud(pelicula: Pelicula): List<Persona>;
+    +sugerirPorPuntaje(): List<Persona>;
+}
+
+class Pelicula {
+    -titulo: String;
+    -fechaEstreno: LocalDate;
+    -puntaje: int;
+
+    +Pelicula(titulo: String, fechaEstreno: LocalDate, puntaje: int, peliculasSimilares: List<Pelicula>): void;
+    +getFechaEstreno(): LocalDate;
+    +getPeliculasSimilares(): List<Pelicula>;
+    +contienePeliculaSimilar(p: Pelicula): void;
+    +getPuntaje(): int;
+}
+
+Pelicula --> Pelicula: peliculasSimilares;
+Decodificador --> Pelicula: listaPeliculas;
+Decodificador --> Pelicula: peliculasSimilares;
+@enduml

@@ -1,0 +1,51 @@
+@startuml
+interface PoliticaCancelacion {
+    +retornarValor(cantidadDias: int, precioPorDia: double, fechaReserva: LocalDate) : double
+}
+
+
+class PoliticaFlexible implements PoliticaCancelacion {
+    +retornarValor(cantidadDias: int, precioPorDia: double, fechaReserva: LocalDate) : double
+}
+
+class PoliticaEstricta implements PoliticaCancelacion {
+    +retornarValor(cantidadDias: int, precioPorDia: double, fechaReserva: LocalDate) : double
+}
+
+class PoliticaModerada implements PoliticaCancelacion {
+    +retornarValor(cantidadDias: int, precioPorDia: double, fechaInicio: LocalDate) : double
+    +consultaRealizada2DiasAntes(fechaInicio: LocalDate) : boolean
+    +consultaRealizadaUnaSemanaAntes(fechaInicio: LocalDate) : boolean
+}
+
+class AutoEnAlquiler {
+    -precioPorDia: double
+    -cantidadPlazas: int
+    -marca: String
+    -politicaCancelacion: PoliticaCancelacion
+    +retornarMontoAReembolsar(cantidadDias: int, fechaReserva: LocalDate) : double
+    +setPoliticaDeCancelacion(politica: PoliticaCancelacion)
+    +getPrecioPorDia() : double
+}
+
+
+class Usuario {
+    -nombre: String
+}
+
+
+class Reserva {
+    -cantidadDias: int
+    -fecha: LocalDate
+    -conductor: Usuario
+    -auto: AutoEnAlquiler
+    +montoAPagar() : double
+    +montoAReembolsar() : double
+}
+
+
+AutoEnAlquiler --> PoliticaCancelacion : "politicaCancelacion"
+Usuario --> AutoEnAlquiler : "1..* autosEnAlquiler"
+Reserva --> Usuario : "1 conductor"
+Reserva --> AutoEnAlquiler : "1 auto"
+@enduml

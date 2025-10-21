@@ -1,0 +1,40 @@
+@startuml
+interface tipoSugerencia {
+  +List<Pelicula> sugerir(Decodificador d)
+}
+
+class Pelicula {
+  -titulo: String 
+  -fechaEstreno: LocalDate 
+  -puntaje: int 
+  -peliculasSimilares: List<Pelicula> 
+
+  +Pelicula()
+  +Pelicula(String, LocalDate, int, List<Pelicula>): void
+  +getFechaEstreno(): LocalDate 
+  +getPeliculasSimilares(): List<Pelicula> 
+  +contienePeliculaSimilar(Pelicula p): boolean 
+  +getPuntaje(): int 
+}
+
+class Decodificador {
+
+  +Decodificador(List<Pelicula>): void
+  +sugerir(): List<Pelicula> 
+  +cambiarTipoSugerencia(tipoSugerencia): void 
+  +getListaPeliculas(): List<Pelicula> 
+  +getPeliculasReproducidas(): List<Pelicula> 
+  +getPeliculaReproducidaRandom(): Pelicula
+}
+
+class SugerenciaPorPuntaje implements tipoSugerencia
+class SugerenciaPorNovedad implements tipoSugerencia
+class SugerenciaPorSimilitud implements tipoSugerencia
+
+
+
+Decodificador --> tipoSugerencia : sugeridor
+Decodificador --> Pelicula : peliculasReproducidas
+Decodificador --> Pelicula : listaPeliculas
+Pelicula --> Pelicula : peliculasSimilares (0..*)
+@enduml
